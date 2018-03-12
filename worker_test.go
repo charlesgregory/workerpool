@@ -39,15 +39,17 @@ func monte_carlo_pi(payload interface{})interface{} {
 func TestPool_Run(t *testing.T) {
 	var samples=1000000000
 	var cores=4
-	tasks:=make([]*Task,0)
-	for i:=0;i<cores;i++{
-		tasks=append(tasks,NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores}))
-	}
-	p:=NewPool(tasks,cores)
-	p.Run()
+	p:=NewPool(cores)
+	p.Start()
+	go func(){
+		for i:=0;i<cores;i++{
+			p.NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores})
+		}
+	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		total += tasks[i].payload.(testPayload).result
+		var ret=<-p.retChan
+		total += ret.(testPayload).result
 	}
 
 	pi := (float64(total) / float64(samples)) * 4
@@ -56,15 +58,17 @@ func TestPool_Run(t *testing.T) {
 func BenchmarkPool_Run_2(b *testing.B) {
 	var samples=1000000000
 	var cores=2
-	tasks:=make([]*Task,0)
-	for i:=0;i<cores;i++{
-		tasks=append(tasks,NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores}))
-	}
-	p:=NewPool(tasks,cores)
-	p.Run()
+	p:=NewPool(cores)
+	p.Start()
+	go func(){
+		for i:=0;i<cores;i++{
+			p.NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores})
+		}
+	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		total += tasks[i].payload.(testPayload).result
+		var ret=<-p.retChan
+		total += ret.(testPayload).result
 	}
 
 	pi := (float64(total) / float64(samples)) * 4
@@ -73,17 +77,58 @@ func BenchmarkPool_Run_2(b *testing.B) {
 func BenchmarkPool_Run_4(b *testing.B) {
 	var samples=1000000000
 	var cores=4
-	tasks:=make([]*Task,0)
-	for i:=0;i<cores;i++{
-		tasks=append(tasks,NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores}))
-	}
-	p:=NewPool(tasks,cores)
-	p.Run()
+	p:=NewPool(cores)
+	p.Start()
+	go func(){
+		for i:=0;i<cores;i++{
+			p.NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores})
+		}
+	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		total += tasks[i].payload.(testPayload).result
+		var ret=<-p.retChan
+		total += ret.(testPayload).result
 	}
 
 	pi := (float64(total) / float64(samples)) * 4
 	b.Log(pi)
 }
+func BenchmarkPool_Run_8(b *testing.B) {
+	var samples=1000000000
+	var cores=8
+	p:=NewPool(cores)
+	p.Start()
+	go func(){
+		for i:=0;i<cores;i++{
+			p.NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores})
+		}
+	}()
+	total := 0
+	for i := 0; i < cores; i++ {
+		var ret=<-p.retChan
+		total += ret.(testPayload).result
+	}
+
+	pi := (float64(total) / float64(samples)) * 4
+	b.Log(pi)
+}
+func BenchmarkPool_Run_16(b *testing.B) {
+	var samples=1000000000
+	var cores=16
+	p:=NewPool(cores)
+	p.Start()
+	go func(){
+		for i:=0;i<cores;i++{
+			p.NewTask(monte_carlo_pi,testPayload{radius:100.0,reps:samples/cores})
+		}
+	}()
+	total := 0
+	for i := 0; i < cores; i++ {
+		var ret=<-p.retChan
+		total += ret.(testPayload).result
+	}
+
+	pi := (float64(total) / float64(samples)) * 4
+	b.Log(pi)
+}
+

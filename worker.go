@@ -14,49 +14,49 @@ type Task struct {
 type Work func(interface{})interface{}
 
 
-// NewTask initializes a new task based on a given work function.
-func NewTask(f Work,p interface{}) *Task {
-	return &Task{f:f,payload:p}
-}
 
 // Run runs a Task and does appropriate accounting via a given sync.WorkGroup.
-func (t *Task) Run(wg *sync.WaitGroup) {
-	t.payload=t.f(t.payload)
-	wg.Done()
+func (t *Task) Run(p *Pool) {
+	select {
+	case p.retChan<-t.f(t.payload):
+		p.wg.Done()
+	}
 }
 
 // Pool is a worker group that runs a number of tasks at a configured
 // concurrency.
 type Pool struct {
-	Tasks []*Task
-
 	concurrency int
 	tasksChan   chan *Task
+	retChan   chan interface{}
 	wg          sync.WaitGroup
 }
 
 // NewPool initializes a new pool with the given tasks and at the given
 // concurrency.
-func NewPool(tasks []*Task, concurrency int) *Pool {
+func NewPool(concurrency int) *Pool {
 	return &Pool{
-		Tasks:       tasks,
 		concurrency: concurrency,
 		tasksChan:   make(chan *Task),
+		retChan:make(chan interface{}),
 	}
 }
 
-
-// Run runs all work within the pool and blocks until it's finished.
-func (p *Pool) Run() {
-
+func (p *Pool) Start(){
 	for i := 0; i < p.concurrency; i++ {
 		go p.work()
 	}
+}
 
-	p.wg.Add(len(p.Tasks))
-	for _, task := range p.Tasks {
-		p.tasksChan <- task
+func (p *Pool) NewTask(f Work,payload interface{}){
+	select {
+		case p.tasksChan<-&Task{f:f,payload:payload}:
+			p.wg.Add(1)
 	}
+}
+
+// Run runs all work within the pool and blocks until it's finished.
+func (p *Pool) Close() {
 
 	// all workers return
 	close(p.tasksChan)
@@ -67,7 +67,7 @@ func (p *Pool) Run() {
 // The work loop for any single goroutine.
 func (p *Pool) work() {
 	for task := range p.tasksChan {
-		task.Run(&p.wg)
+		task.Run(p)
 	}
 }
 
