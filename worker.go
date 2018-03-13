@@ -8,8 +8,8 @@ import (
 type Task struct {
 	// Err holds an error that occurred during a task. Its result is only
 	// meaningful after Run has been called for the pool that holds it.
-	payload interface{}
-	f Work
+	Payload interface{}
+	F       Work
 }
 type Work func(interface{})interface{}
 
@@ -18,7 +18,7 @@ type Work func(interface{})interface{}
 // Run runs a Task and does appropriate accounting via a given sync.WorkGroup.
 func (t *Task) Run(p *Pool) {
 	select {
-	case p.RetChan <-t.f(t.payload):
+	case p.RetChan <-t.F(t.Payload):
 		p.wg.Done()
 	}
 }
@@ -50,7 +50,7 @@ func (p *Pool) Start(){
 
 func (p *Pool) NewTask(f Work,payload interface{}){
 	select {
-		case p.tasksChan<-&Task{f:f,payload:payload}:
+		case p.tasksChan<-&Task{F:f, Payload:payload}:
 			p.wg.Add(1)
 	}
 }
