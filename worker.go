@@ -18,7 +18,7 @@ type Work func(interface{})interface{}
 // Run runs a Task and does appropriate accounting via a given sync.WorkGroup.
 func (t *Task) Run(p *Pool) {
 	select {
-	case p.retChan<-t.f(t.payload):
+	case p.RetChan <-t.f(t.payload):
 		p.wg.Done()
 	}
 }
@@ -28,7 +28,7 @@ func (t *Task) Run(p *Pool) {
 type Pool struct {
 	concurrency int
 	tasksChan   chan *Task
-	retChan   chan interface{}
+	RetChan     chan interface{}
 	wg          sync.WaitGroup
 }
 
@@ -38,7 +38,7 @@ func NewPool(concurrency int) *Pool {
 	return &Pool{
 		concurrency: concurrency,
 		tasksChan:   make(chan *Task),
-		retChan:make(chan interface{}),
+		RetChan:     make(chan interface{}),
 	}
 }
 

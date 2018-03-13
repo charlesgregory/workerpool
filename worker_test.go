@@ -48,7 +48,7 @@ func TestPool_Run(t *testing.T) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.retChan
+		var ret=<-p.RetChan
 		total += ret.(testPayload).result
 	}
 
@@ -67,7 +67,7 @@ func BenchmarkPool_Run_2(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.retChan
+		var ret=<-p.RetChan
 		total += ret.(testPayload).result
 	}
 
@@ -86,7 +86,7 @@ func BenchmarkPool_Run_4(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.retChan
+		var ret=<-p.RetChan
 		total += ret.(testPayload).result
 	}
 
@@ -105,7 +105,7 @@ func BenchmarkPool_Run_8(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.retChan
+		var ret=<-p.RetChan
 		total += ret.(testPayload).result
 	}
 
@@ -124,7 +124,7 @@ func BenchmarkPool_Run_16(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.retChan
+		var ret=<-p.RetChan
 		total += ret.(testPayload).result
 	}
 
