@@ -35,7 +35,28 @@ func monte_carlo_pi(payload interface{})interface{} {
 	task.result = count
 	return task
 }
-
+type work struct{
+	a,b,res int
+}
+func doWork(payload interface{})interface{}{
+	var task=payload.(work)
+	task.res=task.a+task.b
+	return task
+}
+func TestSimple(t *testing.T){
+	p:=NewPool(4)
+	p.Start()
+	for i:=0;i<100000;i++{
+		p.NewTask(doWork,work{a:i,b:i+1})
+	}
+	p.Close()
+	for task:=range p.RetChan.Recv{
+		w:=task.(work)
+		if !(w.a+w.b==w.res){
+			t.Fail()
+		}
+	}
+}
 func TestPool_Run(t *testing.T) {
 	var samples=1000000000
 	var cores=4
@@ -48,7 +69,7 @@ func TestPool_Run(t *testing.T) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.RetChan
+		var ret=<-p.RetChan.Recv
 		total += ret.(testPayload).result
 	}
 
@@ -67,7 +88,7 @@ func BenchmarkPool_Run_2(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.RetChan
+		var ret=<-p.RetChan.Recv
 		total += ret.(testPayload).result
 	}
 
@@ -86,7 +107,7 @@ func BenchmarkPool_Run_4(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.RetChan
+		var ret=<-p.RetChan.Recv
 		total += ret.(testPayload).result
 	}
 
@@ -105,7 +126,7 @@ func BenchmarkPool_Run_8(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.RetChan
+		var ret=<-p.RetChan.Recv
 		total += ret.(testPayload).result
 	}
 
@@ -124,7 +145,7 @@ func BenchmarkPool_Run_16(b *testing.B) {
 	}()
 	total := 0
 	for i := 0; i < cores; i++ {
-		var ret=<-p.RetChan
+		var ret=<-p.RetChan.Recv
 		total += ret.(testPayload).result
 	}
 
