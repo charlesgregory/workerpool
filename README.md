@@ -2,7 +2,6 @@ This is a simple worker pool package for go.
 
 To install:
 
-    go get github.com/hectane/go-nonblockingchan
     go get github.com/charlesgregory/workerpool
 
 Example of how to use:
