@@ -2,7 +2,6 @@ package workerpool
 
 import (
 	"sync"
-	"github.com/hectane/go-nonblockingchan"
 )
 
 // Task encapsulates a work item that should go in a work pool.
@@ -20,7 +19,7 @@ type Work func(interface{})interface{}
 func (t *Task) Run(p *Pool) {
 	var ret=t.F(t.Payload)
 	select {
-	case p.RetChan.Send <-ret:
+	case p.RetChan <-ret:
 	}
 }
 
@@ -28,8 +27,8 @@ func (t *Task) Run(p *Pool) {
 // concurrency.
 type Pool struct {
 	concurrency int
-	tasksChan   *nbc.NonBlockingChan
-	RetChan     *nbc.NonBlockingChan
+	tasksChan   chan *Task
+	RetChan     chan interface{}
 	wg          sync.WaitGroup
 }
 
@@ -38,8 +37,8 @@ type Pool struct {
 func NewPool(concurrency int) *Pool {
 	return &Pool{
 		concurrency: concurrency,
-		tasksChan:   nbc.New(),
-		RetChan:     nbc.New(),
+		tasksChan:   make(chan *Task,concurrency*2),
+		RetChan:     make(chan interface{},concurrency*2),
 	}
 }
 
@@ -52,23 +51,23 @@ func (p *Pool) Start(){
 
 func (p *Pool) NewTask(f Work,payload interface{}){
 	select {
-		case p.tasksChan.Send<-&Task{F:f, Payload:payload}:
+		case p.tasksChan<-&Task{F:f, Payload:payload}:
 	}
 }
 
 // Run runs all work within the pool and blocks until it's finished.
 func (p *Pool) Close() {
 	// all workers return
-	close(p.tasksChan.Send)
+	close(p.tasksChan)
 	p.wg.Wait()
-	close(p.RetChan.Send)
+	close(p.RetChan)
 }
 
 // The work loop for any single goroutine.
 func (p *Pool) work() {
 	defer p.wg.Done()
-	for task := range p.tasksChan.Recv {
-		var todo=task.(*Task)
+	var todo *Task
+	for todo= range p.tasksChan {
 		todo.Run(p)
 	}
 }
